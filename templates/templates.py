@@ -7,19 +7,23 @@ template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir))
 
 
-hidden_html = """
-<input type="hidden" name="food" value="%s">
-"""
+def rot13(text):
+    returnStr = ''
+    alphabetStr='abcdefghijklmnopqrstuvwxyz'
+    capAlphabetStr = alphabetStr + alphabetStr.upper()
+    alphabetList= list(capAlphabetStr)
 
-item_html = """<li>%s</li>"""
-shopping_list_html = """
-<br>
-<br>
-<h2>Shopping List</h2>
-<ul>
-  %s
-</ul>
-"""
+    for character in text:
+        if(character in alphabetList):
+            currIdx = alphabetList.index(character)
+            nxtIdx = currIdx + 13
+            if (currIdx <= 25 and nxtIdx >= 26) or (currIdx > 25 and nxtIdx >= 52):
+                returnStr += alphabetList[nxtIdx - 26]
+            else:
+                returnStr += alphabetList[nxtIdx]
+        else:
+            returnStr += character
+    return returnStr
 
 
 class Handler(webapp2.RequestHandler):
@@ -37,7 +41,7 @@ class Handler(webapp2.RequestHandler):
 class MainPage(Handler):
 
     def get(self):
-        self.render("shopping_list.html", name=self.request.get("name"))
+        self.render("shopping_list.html", name=self.request.get("rot13"))
 
 
 app = webapp2.WSGIApplication([
