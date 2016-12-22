@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <title>/ascii/</title>
+    </head>
+
+    <body>
+
+        <h1>/ascii/</h1>
+
+        <form class="" method="post">
+            <label for="">
+                <div class="">
+                    title
+                </div>
+                <input type="text" name="title" value="{{title}}">
+            </label>
+
+            <label for="">
+
+                <div class="">
+                    art
+                </div>
+                <textarea name="art" rows="8" cols="80" value="{{art}}"></textarea>
+
+            </label>
+
+            <div class="error">
+                {{error}}
+            </div>
+            <input type="submit" name="" value="Submit">
+        </form>
+        <hr> {% for art in arts %}
+        <div class="art">
+            <div class="art-title">
+                {{art.title}}
+            </div>
+            <div class="art-body">
+                {{art.art}}
+            </div>
+        </div>
+        {% endfor %}
+    </body>
+
+</html>

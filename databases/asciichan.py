@@ -2,9 +2,11 @@ import os
 
 import webapp2
 import jinja2
+from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
+jinja_env = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
 
 
 def rot13(text):
@@ -39,17 +41,34 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
+class Art(db.Model):
+    title = db.StringProperty(required=True)
+    art = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+
+
 class MainPage(Handler):
 
+    def render_front(self, title="", art="", error=""):
+        arts = db.GqlQuery("Select * FROM Art ORDER BY created DESC")
+        self.render("front.html", title=title, art=art, error=error, arts=arts)
+
     def get(self):
-        self.render("rot13.html")
+        self.render_front()
 
     def post(self):
-        userText = self.request.get('text')
-        returnStr = rot13(userText)
-        self.render("rot13.html", val=returnStr)
+        title = self.request.get('title')
+        art = self.request.get('art')
 
-
+        if title and art:
+            a = Art(title=title, art=art)
+            a.put()
+            # get rid of redirect msg
+            self.redirect("/")
+        else:
+            error = "we need both a title and some artwork!"
+            self.render_front(art=art,
+                              title=title, error=error)
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),

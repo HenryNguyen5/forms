@@ -1,0 +1,30 @@
+<h1>Signup</h1>
+<form class="" action="/" method="post">
+    <label for="">
+      Username
+      <input type="text" name="username" value="{{username}}">
+      <div style="color: red">{{ errDictHTML['usrErr'] }}</div>
+    </label>
+    <br>
+      <label for="">
+        Password
+        <input type="password" name="password" value="">
+        <div style="color: red">{{ errDictHTML['passErr'] }}</div>
+      </label>
+      <br>
+    <label for="">
+      Verify Password
+      <input type="password" name="verify" value="">
+      <div style="color: red">{{ errDictHTML['verifyErr'] }}</div>
+  </label>
+  <br>
+    <label for="">
+      Email (optional)
+      <input type="text" name="email" value="{{email}}">
+      <div style="color: red">{{ errDictHTML['emailErr'] }}</div>
+    </label>
+
+
+
+    <input type="submit" name="" value="submit">
+</form>
