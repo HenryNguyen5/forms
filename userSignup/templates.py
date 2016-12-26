@@ -2,9 +2,10 @@ import os
 import re
 import webapp2
 import jinja2
+import hmac
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
 
 
 def valid_username(username):
@@ -33,6 +34,19 @@ def noErrors(errDictionary):
     return True
 
 
+class HashCookie():
+    __secret = 'superSekreitcookies'
+
+    def hash(self, val):
+        h = hmac.new(self.__secret, val).hexdigest()
+        return '%s|%s' % (val, h)
+
+    def check(self, hCookie):
+        plainVal = hCookie.split('|')[0]
+        if(self.hash(plainVal) == hCookie):
+            return plainVal
+
+
 class Handler(webapp2.RequestHandler):
 
     def write(self, *a, **kw):
@@ -46,7 +60,7 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class MainPage(Handler):
+class MainPage(Handler, HashCookie):
 
     def get(self):
         self.render("signup.html", errDictHTML='')
@@ -58,7 +72,6 @@ class MainPage(Handler):
         password = self.request.get('password')
         verify = self.request.get('verify')
         email = self.request.get('email')
-        print username
         if(not valid_username(username)):
             errDict['usrErr'] = "Thats not a valid username"
             print "user not valid"
@@ -70,17 +83,32 @@ class MainPage(Handler):
             errDict['emailErr'] = "Thats not a valid email"
 
         if(noErrors(errDict)):
-            self.redirect('/welcome?user=' + username)
+            hCookie = self.hash(username)
+            self.response.headers.add_header(
+                'Set-Cookie', str("username=%s; Path=/" % hCookie))
+            self.redirect('/welcome')
         self.render("signup.html", errDictHTML=errDict)
 
 
-class Welcome(Handler):
+class Welcome(Handler, HashCookie):
 
     def get(self):
-        self.render("welcome.html", user=self.request.get('user'))
+        cookie = self.request.cookies.get('username', '')
+        chkdCookie = self.check(cookie)
+        if (chkdCookie):
+            self.render("welcome.html", user=chkdCookie)
+        else:
+            self.redirect('/signup')
+
+class LogOut(Handler):
+    def get(self):
+        cookieToDel = self.request.cookies.get('username', '')
+        self.response.headers.add_header('Set-Cookie', "username=; Path=/")
+        self.redirect('/signup')
 
 app = webapp2.WSGIApplication([
-    ('/', MainPage),
-    ('/welcome*', Welcome),
+    ('/signup', MainPage),
+    ('/welcome', Welcome),
+    ('/logout', LogOut),
 ],
     debug=True)
